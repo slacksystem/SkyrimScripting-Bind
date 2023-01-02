@@ -1,5 +1,14 @@
 <?xml version='1.0'?>
-<PapyrusProject xmlns="PapyrusProject.xsd" Flags="TESV_Papyrus_Flags.flg" Game="sse" Output="Scripts">
+<PapyrusProject xmlns="PapyrusProject.xsd" 
+    Flags="TESV_Papyrus_Flags.flg" 
+    Game="sse"
+    Output="Scripts" 
+    Anonymize="true" 
+    Optimize="false" 
+    Release="false" 
+    Zip="false"
+    Package="false"
+    Final="false">
     <!--
         These variables contain hard-coded paths because the VS Code Papyrus extension does not support environment variables: https://github.com/joelday/papyrus-lang/issues/145
         Please change the values of these variables to point to folders on your PC.
@@ -15,13 +24,17 @@
           New-Item -ItemType SymbolicLink -Path "C:\Modding\PapyrusImports" -Target "C:\Users\mrowr\Dropbox\Skyrim\PapyrusImports"
     -->
     <Variables>
-        <Variable Name="ModName" Value="BIND.Examples" />
-        <Variable Name="Mods" Value="C:\Modding\Mods" />
-        <Variable Name="Imports" Value="C:\Modding\PapyrusImports" />
+        <!-- Set the name of your mod: -->
+        <Variable Name="ModName" Value="Bind"/>
+        <!-- The folder where you store all of your mods -->
+        <Variable Name="ModsFolder" Value="C:\Modding\Mods.aur" />
+        <!-- The folder where you store additional Papyrus imports -->
+        <Variable Name="ImportsFolder" Value="C:\\Modding\\Code\\Papyrus Imports" />
     </Variables>
     <Imports>
-        <Import>@Imports/SKSE/Scripts/Source</Import>
-        <Import>C:\Program Files (x86)\Steam\steamapps\common\Skyrim Special Edition\Data\Scripts\Source</Import>
+        <!-- <Import>@ImportsFolder\SKSE\Scripts\Source</Import> -->
+        <Import>@ImportsFolder\SKSE</Import>
+        <Import>C:\Steam\steamapps\common\Skyrim Special Edition\Data\Scripts\Source</Import>
     </Imports>
     <Folders>
         <Folder>./Scripts/Source</Folder>
