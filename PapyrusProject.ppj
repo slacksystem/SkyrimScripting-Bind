@@ -27,7 +27,7 @@
         <!-- Set the name of your mod: -->
         <Variable Name="ModName" Value="Bind"/>
         <!-- The folder where you store all of your mods -->
-        <Variable Name="ModsFolder" Value="C:\Modding\Mods.aur" />
+        <Variable Name="ModsFolder" Value="C:\\Modding\\Mods.aur" />
         <!-- The folder where you store additional Papyrus imports -->
         <Variable Name="ImportsFolder" Value="C:\\Modding\\Code\\Papyrus Imports" />
     </Variables>
