@@ -98,6 +98,19 @@ namespace SkyrimScripting::Bind {
         if (!editorID.empty()) form->SetFormEditorID(editorID.c_str());
         Bind_Form(form);
     }
+    void Bind_GeneratedSpell(RE::EffectSetting*) {
+        auto* form = RE::IFormFactory::GetConcreteFormFactoryByType<RE::SpellItem>()->Create();
+        // if (!editorID.empty()) form->SetFormEditorID(editorID.c_str());
+        Bind_Form(form);
+    }
+    void Bind_GeneratedMagicEffect(RE::MagicSystem::CastingType castingType) {
+        auto* form = RE::IFormFactory::GetConcreteFormFactoryByType<RE::EffectSetting>()->Create();
+        // if (!editorID.empty()) form->SetFormEditorID(editorID.c_str());
+        form->data.castingType = castingType;
+
+        Bind_Form(form);
+        Bind_GeneratedSpell(form);
+    }
     void Bind_FormID(RE::FormID formID) {
         auto* form = LookupFormID(formID);
         if (form) Bind_Form(form);
@@ -108,7 +121,7 @@ namespace SkyrimScripting::Bind {
     }
     bool IsUnderstoodScriptParentType(std::string parentTypeName) {
         LowerCase(parentTypeName);
-        if (parentTypeName == "quest" || parentTypeName == "actor" || parentTypeName == "objectreference") return true;
+        if (parentTypeName == "quest" || parentTypeName == "actor" || parentTypeName == "objectreference" || parentTypeName == "activemagiceffect") return true;
         return false;
     }
     void AutoBindBasedOnScriptExtends() {
@@ -166,6 +179,12 @@ namespace SkyrimScripting::Bind {
             Bind_GeneratedObject_BaseFormID(std::stoi(bindTarget.substr(8, bindTarget.size() - 9), 0, 16));
         else if (bindTarget.starts_with("$object("))
             Bind_GeneratedObject_BaseEditorID(bindTarget.substr(8, bindTarget.size() - 9));
+        else if (bindTarget.starts_with("$spelltype(")){
+            std::string spellType = bindTarget.substr(10, bindTarget.size() - 11);
+            if (spellType == "concentration")
+                Bind_GeneratedMagicEffect(RE::MagicSystem::CastingType::kConcentration);
+        }
+
         else
             Bind_EditorID(bindTarget);
     }
