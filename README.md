@@ -2,7 +2,7 @@
 
 <a 
     title="Download BIND SKSE Plugin - Install in your Mod Manager"
-    href="https://github.com/SkyrimScripting/Bind/releases/download/v2/BIND.v2.7z">
+    href="https://github.com/SkyrimScripting/BIND/releases/latest/download/BIND.7z">
     <img
         alt="Download BIND SKSE Plugin - Install in your Mod Manager"
         src="https://raw.githubusercontent.com/SkyrimScripting/Download/main/DownloadButton_256.png"
@@ -10,9 +10,7 @@
         />
 </a>
 
-> Bind Papyrus Scripts On Game Load
-
-![Bind](Images/Logo.png)
+![Bind](Images/BIND_v2_LOGO.png)
 
 # Papyrus Development
 
@@ -20,7 +18,7 @@ This is a **Developer Tool:** _for testing Papyrus scripts!_
 
 # Usage
 
-1. [Install Bind](https://github.com/SkyrimScripting/Bind/releases/download/v1/BIND.Papyrus.Scripts.7z) (_it's an SKSE .dll compatible with SE/AE/GOG/VR_)
+1. **[Install Bind](https://github.com/SkyrimScripting/BIND/releases/latest/download/BIND.7z)** (_it's an SKSE .dll compatible with SE/AE/GOG/VR_)
 1. Create a Papyrus script
 1. Add a `{!BIND}` comment to the script (_see examples below_)
    ```papyrus
@@ -172,6 +170,16 @@ scriptName MyScript extends Quest
     !BIND MQ101
     !BIND MQ102
     !BIND MQ103
+}
+```
+
+## Multiple Targets in a single line
+
+```papyrus
+; This will bind `MyScript` to the the player and three specified NPCs in Riverwood using some of the supported binding options
+scriptName MyScript extends Actor
+{
+    !BIND SvenRef|$Player|0x1348A|HildeRef
 }
 ```
 

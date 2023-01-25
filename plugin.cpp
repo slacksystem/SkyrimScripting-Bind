@@ -22,7 +22,6 @@ namespace SkyrimScripting::Bind {
         }
     };
 
-    bool ProcessingDocStrings;
     std::vector<std::string> BindingLinesFromComments;
     Json::Value DocstringJsonRoot;
     std::filesystem::path DocstringJsonFilePath;
@@ -36,7 +35,6 @@ namespace SkyrimScripting::Bind {
     constexpr auto BIND_COMMENT_PREFIX = "!BIND";
     constexpr auto DEFAULT_JSON = R"({"mtimes":{},"scripts":{}})";
     constexpr auto JSON_FILE_PATH = "Data\\SkyrimScripting\\Bind\\DocStrings.json";
-    constexpr auto BINDING_FILES_FOLDER_ROOT = "Data\\Scripts\\Bindings";
 
     void LowerCase(std::string& text) {
         std::transform(text.begin(), text.end(), text.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
@@ -50,6 +48,13 @@ namespace SkyrimScripting::Bind {
     inline void trim(std::string& s) {
         rtrim(s);
         ltrim(s);
+    }
+    std::vector<std::string> split(const std::string& text, char delim) {
+        std::string line;
+        std::vector<std::string> vec;
+        std::stringstream ss(text);
+        while (std::getline(ss, line, delim)) vec.push_back(line);
+        return vec;
     }
 
     RE::TESForm* LookupFormID(RE::FormID formID) {
@@ -148,24 +153,15 @@ namespace SkyrimScripting::Bind {
             logger::info("BIND ERROR [{}:{}] ({}) No default BIND behavior available for script which `extends` {}", FilePath, LineNumber, ScriptName, parentName);
     }
 
-    void ProcessBindingLine(std::string line) {
-        if (line.empty()) return;
-        trim(line);
-        std::istringstream lineStream{line};
-        lineStream >> ScriptName;
-        if (ScriptName.empty() || ScriptName.starts_with('#') || ScriptName.starts_with("//")) return;
-        if (!vm->TypeIsValid(ScriptName)) {
-            logger::info("BIND ERROR [{}:{}] Script '{}' does not exist", FilePath, LineNumber, ScriptName);
-            return;
-        }
-        logger::info("\"{}\"", line);
-        std::string bindTarget;
-        lineStream >> bindTarget;
+    void ProcessBindingTarget(std::string bindTarget) {
+        trim(bindTarget);
         LowerCase(bindTarget);
         if (bindTarget.empty()) {
             AutoBindBasedOnScriptExtends();
             return;
-        } else if (bindTarget.starts_with("0x"))
+        } else if (bindTarget.contains('|'))
+            for (const auto& target : split(bindTarget, '|')) ProcessBindingTarget(target);
+        else if (bindTarget.starts_with("0x"))
             Bind_FormID(std::stoi(bindTarget, 0, 16));
         else if (bindTarget == "$player")
             Bind_FormID(0x14);
@@ -189,35 +185,26 @@ namespace SkyrimScripting::Bind {
             Bind_EditorID(bindTarget);
     }
 
-    void ProcessBindingFile() {
-        logger::info("Reading Binding File: {}", FilePath);
-        LineNumber = 1;
-        std::string line;
-        std::ifstream file{FilePath, std::ios::in};
-        while (std::getline(file, line)) {
-            LineNumber++;
-            try {
-                ProcessBindingLine(line);
-            } catch (...) {
-                logger::info("BIND ERROR [{}:{}]", FilePath, LineNumber);
-            }
+    void ProcessBindingLine(std::string line) {
+        if (line.empty()) return;
+        trim(line);
+        std::istringstream lineStream{line};
+        lineStream >> ScriptName;
+        if (ScriptName.empty() || ScriptName.starts_with('#') || ScriptName.starts_with("//")) return;
+        if (!vm->TypeIsValid(ScriptName)) {
+            logger::info("BIND ERROR [{}:{}] Script '{}' does not exist", FilePath, LineNumber, ScriptName);
+            return;
         }
-        file.close();
-    }
-
-    void ProcessAllBindingFiles() {
-        if (!std::filesystem::is_directory(BINDING_FILES_FOLDER_ROOT)) return;
-        for (auto& file : std::filesystem::directory_iterator(BINDING_FILES_FOLDER_ROOT)) {
-            FilePath = file.path().string();
-            ProcessBindingFile();
-        }
+        logger::info("\"{}\"", line);
+        std::string bindTarget;
+        lineStream >> bindTarget;
+        ProcessBindingTarget(bindTarget);
     }
 
     void OnGameStart() {
         vm = RE::BSScript::Internal::VirtualMachine::GetSingleton();
         DefaultBaseFormForCreatingObjects = RE::TESForm::LookupByID(0xAEBF3);             // DwarvenFork
         LocationForPlacingObjects = RE::TESForm::LookupByID<RE::TESObjectREFR>(0xBBCD1);  // The chest in WEMerchantChests
-        ProcessAllBindingFiles();
         for (auto binding : BindingLinesFromComments) ProcessBindingLine(binding);
     }
 
@@ -250,7 +237,6 @@ namespace SkyrimScripting::Bind {
         unsigned int scriptCount = 0;
         unsigned int unmodifiedScriptCount = 0;
         auto startTime = std::chrono::high_resolution_clock::now();
-        ProcessingDocStrings = true;
         DocstringJsonFilePath = std::filesystem::current_path() / JSON_FILE_PATH;
         if (!std::filesystem::is_directory(DocstringJsonFilePath.parent_path())) std::filesystem::create_directory(DocstringJsonFilePath.parent_path());
         if (InitJson()) {
@@ -312,7 +298,6 @@ namespace SkyrimScripting::Bind {
                 }
             }
         }
-        ProcessingDocStrings = false;
         auto endTime = std::chrono::high_resolution_clock::now();
         auto durationInMs = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
         logger::info("DocString Processing {} scripts ({} unmodified) took {}ms", scriptCount, unmodifiedScriptCount, durationInMs);
